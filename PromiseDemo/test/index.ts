@@ -44,4 +44,19 @@ describe("Promise", () => {
         // @ts-ignore
         assert(called === true)
     })
+    it("promise.then(success)中的success会在resolve被调用时执行", done => {
+        let called = false
+        const promise = new Promise((resolve, reject) => {
+            assert(called === false)
+            resolve()
+            setTimeout(() => {
+                assert(called === true)
+                done()
+            }, 0)
+        })
+        // @ts-ignore
+        promise.then(() => {
+            called = true
+        })
+    })
 })
