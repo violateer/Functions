@@ -26,10 +26,20 @@ describe("Promise", () => {
         const promise = new Promise(() => { })
         assert.isFunction(promise.then)
     })
-    it("new Promise(fn)应是立即执行", () => {
+    it("new Promise(fn)中的fn应是立即执行", () => {
         let called = false
         const promise = new Promise(() => {
             called = true
+        })
+        // @ts-ignore
+        assert(called === true)
+    })
+    it("new Promise(fn)中的fn执行时接收resolve和reject两个函数", () => {
+        let called = false
+        const promise = new Promise((resolve, reject) => {
+            called = true
+            assert.isFunction(resolve)
+            assert.isFunction(reject)
         })
         // @ts-ignore
         assert(called === true)

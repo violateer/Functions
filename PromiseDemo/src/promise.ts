@@ -3,7 +3,7 @@ class myPromise {
         if (typeof fn !== "function") {
             throw new Error("我只接收函数")
         }
-        fn()
+        fn(() => {}, () => {})
     }
     then() {}
 }
