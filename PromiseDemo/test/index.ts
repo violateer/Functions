@@ -1,4 +1,8 @@
 import * as chai from "chai"
+import * as sinon from "sinon"
+import * as sinonChai from "sinon-chai"
+chai.use(sinonChai)
+
 import Promise from "../src/promise"
 
 const assert = chai.assert
@@ -27,36 +31,28 @@ describe("Promise", () => {
         assert.isFunction(promise.then)
     })
     it("new Promise(fn)中的fn应是立即执行", () => {
-        let called = false
-        const promise = new Promise(() => {
-            called = true
-        })
-        // @ts-ignore
-        assert(called === true)
+        let fn = sinon.fake()
+        new Promise(fn)
+        assert(fn.called)
     })
-    it("new Promise(fn)中的fn执行时接收resolve和reject两个函数", () => {
-        let called = false
-        const promise = new Promise((resolve, reject) => {
-            called = true
+    it("new Promise(fn)中的fn执行时接收resolve和reject两个函数", (done) => {
+        new Promise((resolve, reject) => {
             assert.isFunction(resolve)
             assert.isFunction(reject)
+            done()
         })
-        // @ts-ignore
-        assert(called === true)
     })
     it("promise.then(success)中的success会在resolve被调用时执行", done => {
-        let called = false
+        let success = sinon.fake()
         const promise = new Promise((resolve, reject) => {
-            assert(called === false)
+            assert.isFalse(success.called)
             resolve()
             setTimeout(() => {
-                assert(called === true)
+                assert.isTrue(success.called)
                 done()
             }, 0)
         })
         // @ts-ignore
-        promise.then(() => {
-            called = true
-        })
+        promise.then(success)
     })
 })
