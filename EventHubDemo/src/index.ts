@@ -11,11 +11,11 @@ class EventHub {
         this.cache[eventName].push(fn);
     }
     
-    emit(eventName) {
+    emit(eventName, data) {
         // 初始化
         this.cache[eventName] = this.cache[eventName] || [];
         // 将 this.cache[eventName]里面的fn依次调用
-        this.cache[eventName].forEach(fn => fn());
+        this.cache[eventName].forEach(fn => fn(data));
     }
 }
 
