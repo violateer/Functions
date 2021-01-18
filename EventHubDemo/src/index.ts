@@ -6,22 +6,16 @@ class EventHub {
     //}
     on(eventName, fn) {
         // 初始化
-        if (this.cache[eventName] === undefined) {
-            this.cache[eventName] = [];
-        }
+        this.cache[eventName] = this.cache[eventName] || [];
         // 将fn存入 this.cache[eventName]
         this.cache[eventName].push(fn);
     }
     
     emit(eventName) {
+        // 初始化
+        this.cache[eventName] = this.cache[eventName] || [];
         // 将 this.cache[eventName]里面的fn依次调用
-        let arr = this.cache[eventName];
-        if (arr === undefined) {
-            arr = [];
-        }
-        arr.forEach(fn => {
-            fn();
-        });
+        this.cache[eventName].forEach(fn => fn());
     }
 }
 
