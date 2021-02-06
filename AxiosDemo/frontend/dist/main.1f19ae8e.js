@@ -167,6 +167,41 @@ function mergeConfig(obj1, obj2) {
     return t;
   }, target);
 }
+},{}],"axios/interceptor.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var Interceptor = /*#__PURE__*/function () {
+  function Interceptor() {
+    _classCallCheck(this, Interceptor);
+
+    this.handlers = [];
+  }
+
+  _createClass(Interceptor, [{
+    key: "use",
+    value: function use(resolvedHandler, rejectedHandler) {
+      this.handlers.push({
+        resolvedHandler: resolvedHandler,
+        rejectedHandler: rejectedHandler
+      });
+    }
+  }]);
+
+  return Interceptor;
+}();
+
+exports.default = Interceptor;
 },{}],"axios/axios.js":[function(require,module,exports) {
 "use strict";
 
@@ -176,6 +211,10 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = void 0;
 
 var _helper = require("./helper");
+
+var _interceptor = _interopRequireDefault(require("./interceptor"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -187,13 +226,27 @@ var Axios = /*#__PURE__*/function () {
   function Axios(config) {
     _classCallCheck(this, Axios);
 
-    this.defaults = config;
-  }
+    // 默认配置
+    this.defaults = (0, _helper.deepClone)(config); // 拦截器
+
+    this.interceptors = {
+      request: new _interceptor.default(),
+      response: new _interceptor.default()
+    };
+  } // 发送get请求
+
 
   _createClass(Axios, [{
     key: "get",
     value: function get(url, config) {
-      var configs = (0, _helper.mergeConfig)(this.defaults, config);
+      config.method = 'get';
+      config.url = url;
+      return this.request(config);
+    } //发送请求
+
+  }, {
+    key: "send",
+    value: function send(configs) {
       return new Promise(function (resolve) {
         var xhr = new XMLHttpRequest();
 
@@ -205,7 +258,7 @@ var Axios = /*#__PURE__*/function () {
           });
         };
 
-        xhr.open('get', configs.baseURL + url, true); // 添加header
+        xhr.open(configs.method, configs.baseURL + configs.url, true); //添加header头
 
         for (var key in configs.headers) {
           xhr.setRequestHeader(key, configs.headers[key]);
@@ -213,6 +266,29 @@ var Axios = /*#__PURE__*/function () {
 
         xhr.send();
       });
+    } //request请求
+
+  }, {
+    key: "request",
+    value: function request(config) {
+      //配置合并
+      var configs = (0, _helper.mergeConfig)(this.defaults, config); //将配置转成 Promise 对象，链式调用和返回 Promise 对象
+
+      var promise = Promise.resolve(configs); //请求拦截器，遍历 interceptors.request 里的处理函数
+
+      var requestHandlers = this.interceptors.request.handlers;
+      requestHandlers.forEach(function (handler) {
+        promise = promise.then(handler.resolvedHandler, handler.rejectedHandler);
+      }); //数据请求
+
+      promise = promise.then(this.send); //相应拦截器，遍历 interceptors.response 里的处理函数
+
+      var responseHandlers = this.interceptors.response.handlers;
+      responseHandlers.forEach(function (handler) {
+        promise = promise.then(handler.resolvedHandler, handler.rejectedHandler);
+      }); //返回响应信息
+
+      return promise;
     }
   }]);
 
@@ -221,7 +297,7 @@ var Axios = /*#__PURE__*/function () {
 
 var _default = Axios;
 exports.default = _default;
-},{"./helper":"axios/helper.js"}],"axios/config.js":[function(require,module,exports) {
+},{"./helper":"axios/helper.js","./interceptor":"axios/interceptor.js"}],"axios/config.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -260,6 +336,28 @@ var _axios = _interopRequireDefault(require("./axios"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+//请求拦截器
+_axios.default.interceptors.request.use(function (config) {
+  console.log('请求配置信息：', config);
+  return config;
+});
+
+_axios.default.interceptors.request.use(function (config) {
+  config.headers.token = 'x-token-654321';
+  return config;
+}); //响应拦截器
+
+
+_axios.default.interceptors.response.use(function (res) {
+  console.log('请求响应信息', res);
+  return res;
+});
+
+_axios.default.interceptors.response.use(function (res) {
+  res.msg = 'request is ok ~';
+  return res;
+});
+
 _axios.default.get('/user/info', {
   baseURL: 'http://127.0.0.1:3000',
   headers: {
@@ -296,7 +394,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50936" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54222" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
